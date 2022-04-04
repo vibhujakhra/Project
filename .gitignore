@@ -28,3 +28,4 @@ media/
 .env
 .vscode/
 db.sqlite3
+/virtualenv
