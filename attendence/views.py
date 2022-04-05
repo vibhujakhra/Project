@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
-from telnetlib import STATUS
-
 from django.conf import settings
+from rest_framework import viewsets
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from .models import *
 import re, os
@@ -12,6 +11,7 @@ from django.shortcuts import render
 from django.contrib import messages
 from django.views.generic import DetailView
 from .models import LoanDetails
+from django.db.models import Sum
 
 
 class SheetUploadView(DetailView):
@@ -58,10 +58,10 @@ class SheetUploadView(DetailView):
             {"context": context})
 
 
-class StoreData(DetailView):
-
-    def post(self, request):
-        checked_headers = request.get('checked_headers')
+class StoreData(viewsets.ViewSet):
+    permission_classes = (AllowAny,)
+    def create(self, request, *args, **kwargs):
+        # checked_headers = request.data.get('checked_headers', [])
         def parse_row(row):
             STATIC_DICT = {
                 "State Name":'state_name',
@@ -94,21 +94,33 @@ class StoreData(DetailView):
                 "Total Principal":'total_principal',
                 "Total Interest":'total_interest',
                     }
-
             temp = {}
             for r in row:
-                if r in checked_headers:
-                    temp.update({STATIC_DICT.get(r.strip()): row[r]})
+                # if r in checked_headers:
+                temp.update({STATIC_DICT.get(r.strip()): row[r]})
             return temp
 
         try:
-            with open(settings.STATICFILES_DIRS[0]+'/files/tempfile.csv', 'rb') as csv_file:
+            with open(settings.STATICFILES_DIRS[0]+'/files/tempfile.csv',"rt", encoding='utf-8') as csv_file:
                 reader = csv.DictReader(csv_file)
                 for row in reader:
                     LoanDetails(**parse_row(row)).save()
-            os.delete(settings.STATICFILES_DIRS[0]+'/files/tempfile.csv')
+            os.remove(settings.STATICFILES_DIRS[0]+'/files/tempfile.csv')
         except Exception:
             messages.warning(
                 request, 'File was not accessable!')
             return Response(status=400)
         return Response(status=200)
+
+
+def pie_chart(request):
+    labels = []
+    data = []
+    queryset = LoanDetails.objects.values('branch_name').annotate(loan_amount = Sum('principal_os_amount'))
+    for entry in queryset:
+        labels.append(entry['branch_name'])
+        data.append(entry['loan_amount'])
+    return render(request, 'charts.html', {
+        'labels': labels,
+        'data': data,
+    })

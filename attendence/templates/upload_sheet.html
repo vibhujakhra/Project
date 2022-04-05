@@ -11,6 +11,7 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-1.10.2.js"></script>
     <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    
     <style>
         btn_class{
             border: 1px solid green;
@@ -58,6 +59,9 @@
             <div class="form-group col-xs-1" style="margin-top: 22px;">
                 <button type="button"  id="submit_1" value="submit" class="btn btn-success btn_class">SUBMIT</button>
             </div>
+            <div class="form-group col-xs-1" style="margin-top: 22px;">
+                <p><a href=pie-chart>Chart</a></p>
+            </div>
         </div>
     </form>
     <p></p>
@@ -87,11 +91,7 @@
         </table>
         <div>
 </body>
-<script type="text/javascript">
-$(function() {
-    $("#datepicker-13").datepicker({dateFormat: 'yy-mm-dd'});
-});
-</script>
+
 <script>
 
     $("#submit_1").click(function(){
@@ -111,8 +111,7 @@ $(function() {
             },
             error: function (result) {
                 if(result.status == 400) {
-                    var errorMessage = JSON.parse(result.responseText);
-                    alert(errorMessage);
+                    alert("Bad Request");
                 }
             }
         });
